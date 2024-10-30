@@ -32,15 +32,6 @@ def step_gradient(b, w, data, alpha):
 
 
 def fit(data, b, w, alpha, num_iterations):
-    """
-    Ajusta os parâmetros b e w usando descida de gradiente.
-    :param data: np.array - matriz com o conjunto de dados, x na coluna 0 e y na coluna 1
-    :param b: float - valor inicial do bias
-    :param w: float - valor inicial do peso
-    :param alpha: float - taxa de aprendizado
-    :param num_iterations: int - número de iterações para o ajuste
-    :return: list, list - listas com o histórico dos valores de b e w ao longo das iterações
-    """
     b_history = []
     w_history = []
     
