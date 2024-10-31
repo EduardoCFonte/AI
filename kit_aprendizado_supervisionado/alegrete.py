@@ -36,10 +36,8 @@ def fit(data, b, w, alpha, num_iterations):
     w_history = []
     
     for _ in range(num_iterations):
-        # Executa uma atualização por gradiente descendente usando step_gradient
         b, w = step_gradient(b, w, data, alpha)
         
-        # Salva o histórico dos valores de b e w
         b_history.append(b)
         w_history.append(w)
 
