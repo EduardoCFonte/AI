@@ -1,5 +1,5 @@
 Eduardo Camozzato Fonte - 00326194
-Bernardo Boeira -
+Bernardo Boeira - 00303704
 
 Hiper-parâmetros iniciais:
 
