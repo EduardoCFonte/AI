@@ -43,8 +43,20 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.values = util.Counter()  # A Counter is a dict with default 0
 
         # Write value iteration code here
-        "*** YOUR CODE HERE ***"
+        for _ in range(iterations):
+            novo_valor = util.Counter()
+            
+            for estado in mdp.getStates():
+                if mdp.isTerminal(estado):
+                    novo_valor[estado] = 0
+                
+                else:
+                    acoes = mdp.getPossibleActions(estado)
+                    melhor_valor = max(self.computeQValueFromValues(estado,acao) for acao in acoes)        
 
+                    novo_valor[estado] = melhor_valor
+                    
+            self.values - novo_valor
 
     def getValue(self, state):
         """
@@ -57,8 +69,15 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        valor_q = 0 
+        for proximo_estado, probabilidade in self.mdp.getTransitionStatesAndProbs(state,action):
+            recompensa = self.mdp.getReward(state,action,proximo_estado)
+            
+            valor_q += probabilidade * (recompensa + self.discount * self.values[proximo_estado])
+            
+        return valor_q
+    
+        # util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
         """
@@ -69,8 +88,17 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if self.mdp.isTerminal(state):
+            return None
+        
+        acoes = self.mdp.getPossibleActions(state)
+        
+        max_valor_q = max(acoes,key=lambda acao: self.computeQValueFromValues(state,acao))
+        
+        return max_valor_q
+        
+        
+        # util.raiseNotDefined()
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
