@@ -21,7 +21,7 @@
 
 def question2():
     answerDiscount = 0.9
-    answerNoise = 0.2
+    answerNoise = 0.001 #less noise makes it less dangerous to keep going across the bridge
     return answerDiscount, answerNoise
 
 if __name__ == '__main__':
