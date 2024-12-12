@@ -1,10 +1,11 @@
 from typing import Iterable, Set, Tuple
 
+
 class Nodo:
     """
     Implemente a classe Nodo com os atributos descritos na funcao init
     """
-    def __init__(self, estado:str, pai:Nodo, acao:str, custo:int):
+    def __init__(self, estado:str, pai:'Nodo', acao:str, custo:int):
         """
         Inicializa o nodo com os atributos recebidos
         :param estado:str, representacao do estado do 8-puzzle
@@ -12,9 +13,12 @@ class Nodo:
         :param acao:str, acao a partir do pai que leva a este nodo (None no caso do nó raiz)
         :param custo:int, custo do caminho da raiz até este nó
         """
-        # substitua a linha abaixo pelo seu codigo
-        raise NotImplementedError
-
+        
+        self.custo = custo
+        self.acao = acao
+        self.estado = estado
+        self.pai = pai
+       
 
 def sucessor(estado:str)->Set[Tuple[str,str]]:
     """
@@ -24,8 +28,39 @@ def sucessor(estado:str)->Set[Tuple[str,str]]:
     :param estado:
     :return:
     """
-    # substituir a linha abaixo pelo seu codigo
-    raise NotImplementedError
+    
+    set_acao_estado = {} 
+    
+    # dicionario de ações e valores possiveis
+    acoes = {
+        "direita" : 1,
+        "esquerda" : -1,
+        "cima" : -3,
+        "baixo" : 3
+    }
+    
+    # dicionario com as restrições de cada ação para uma determinada posicao vazia
+    restricao_movimentos = {
+        "direita": [2,5,8],
+        "esquerda": [0,3,6],
+        "cima": [0,1,2],
+        "baixo": [6,7,8],
+    }
+    
+    
+    # encontra posicao vazia
+    posicao_atual = estado.find("_")
+    
+    for acao, valor in acoes.items():
+        if posicao_atual not in restricao_movimentos[acao]:
+            proxima_posicao = posicao_atual + valor
+
+            acao_possivel = list(estado)
+            
+            
+    
+    
+    return set_acao_estado
 
 
 def expande(nodo:Nodo)->Set[Nodo]:
@@ -102,3 +137,6 @@ def astar_new_heuristic(estado:str)->list[str]:
     """
     # substituir a linha abaixo pelo seu codigo
     raise NotImplementedError
+
+
+sucessor('2_3541687')
