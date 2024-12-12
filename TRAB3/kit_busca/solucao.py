@@ -18,8 +18,13 @@ class Nodo:
         self.acao = acao
         self.estado = estado
         self.pai = pai
-       
 
+        def __eq__(self,no):
+            return isinstance(no,Nodo) and self.estado == no.estado
+            
+        def __hash__(self):
+            return hash(self.estado)
+        
 def sucessor(estado:str)->Set[Tuple[str,str]]:
     """
     Recebe um estado (string) e retorna um conjunto de tuplas (ação,estado atingido)
@@ -29,7 +34,7 @@ def sucessor(estado:str)->Set[Tuple[str,str]]:
     :return:
     """
     
-    set_acao_estado = {} 
+    set_acao_estado = set() 
     
     # dicionario de ações e valores possiveis
     acoes = {
@@ -57,9 +62,13 @@ def sucessor(estado:str)->Set[Tuple[str,str]]:
 
             acao_possivel = list(estado)
             
+            # troca o conteudo da posicão atual do "_" coom a posição que será atingida após o calculo da proxima posicao
+            acao_possivel[posicao_atual],acao_possivel[proxima_posicao] = acao_possivel[proxima_posicao], acao_possivel[posicao_atual]
             
-    
-    
+            tupla_acao = (acao, "".join(acao_possivel))
+            
+            set_acao_estado.add(tupla_acao)
+
     return set_acao_estado
 
 
@@ -138,5 +147,3 @@ def astar_new_heuristic(estado:str)->list[str]:
     # substituir a linha abaixo pelo seu codigo
     raise NotImplementedError
 
-
-sucessor('2_3541687')
