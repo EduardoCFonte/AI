@@ -1,155 +1,171 @@
 from typing import Iterable, Set, Tuple
-
+import heapq
 
 class Nodo:
-    """
-    Implemente a classe Nodo com os atributos descritos na funcao init
-    """
-    def __init__(self, estado:str, pai:'Nodo', acao:str, custo:int):
-        """
-        Inicializa o nodo com os atributos recebidos
-        :param estado:str, representacao do estado do 8-puzzle
-        :param pai:Nodo, referencia ao nodo pai, (None no caso do nó raiz)
-        :param acao:str, acao a partir do pai que leva a este nodo (None no caso do nó raiz)
-        :param custo:int, custo do caminho da raiz até este nó
-        """
-        
-        self.custo = custo
-        self.acao = acao
+    
+    def __init__(self, estado: str, pai: 'Nodo', acao: str, custo: int):
         self.estado = estado
         self.pai = pai
+        self.acao = acao
+        self.custo = custo
 
-        def __eq__(self,no):
-            return isinstance(no,Nodo) and self.estado == no.estado
-            
-        def __hash__(self):
-            return hash(self.estado)
-        
-def sucessor(estado:str)->Set[Tuple[str,str]]:
-    """
-    Recebe um estado (string) e retorna um conjunto de tuplas (ação,estado atingido)
-    para cada ação possível no estado recebido.
-    Tanto a ação quanto o estado atingido são strings também.
-    :param estado:
-    :return:
-    """
+    def __eq__(self, other):
+        return isinstance(other, Nodo) and self.estado == other.estado
+
+    def __hash__(self):
+        return hash(self.estado)
+
+    def __lt__(self, other):
+        # Comparar com base no custo para usar em heapq
+        return self.custo < other.custo
+def sucessor(estado: str) -> Set[Tuple[str, str]]:
     
-    set_acao_estado = set() 
-    
-    # dicionario de ações e valores possiveis
-    acoes = {
-        "direita" : 1,
-        "esquerda" : -1,
-        "acima" : -3,
-        "abaixo" : 3
+    movimentos = {
+        "direita": 1, "esquerda": -1, "acima": -3, "abaixo": 3
     }
-    
-    # dicionario com as restrições de cada ação para uma determinada posicao vazia
-    restricao_movimentos = {
-        "direita": [2,5,8],
-        "esquerda": [0,3,6],
-        "acima": [0,1,2],
-        "abaixo": [6,7,8],
+    restricoes = {
+        "direita": [2, 5, 8], "esquerda": [0, 3, 6],
+        "acima": [0, 1, 2], "abaixo": [6, 7, 8]
     }
-    
-    
-    # encontra posicao vazia
-    posicao_atual = estado.find("_")
-    
-    for acao, valor in acoes.items():
-        if posicao_atual not in restricao_movimentos[acao]:
-            proxima_posicao = posicao_atual + valor
+    posicao_vazia = estado.find("_")
+    sucessores = set()
 
-            acao_possivel = list(estado)
-            
-            # troca o conteudo da posicão atual do "_" coom a posição que será atingida após o calculo da proxima posicao
-            acao_possivel[posicao_atual],acao_possivel[proxima_posicao] = acao_possivel[proxima_posicao], acao_possivel[posicao_atual]
-            
-            tupla_acao = (acao, "".join(acao_possivel))
-            
-            set_acao_estado.add(tupla_acao)
+    for acao, deslocamento in movimentos.items():
+        if posicao_vazia not in restricoes[acao]:
+            nova_posicao = posicao_vazia + deslocamento
+            novo_estado = list(estado)
+            novo_estado[posicao_vazia], novo_estado[nova_posicao] = novo_estado[nova_posicao], novo_estado[posicao_vazia]
+            sucessores.add((acao, "".join(novo_estado)))
 
-    return set_acao_estado
+    return sucessores
 
-
-def expande(nodo:Nodo)->Set[Nodo]:
-    """
-    Recebe um nodo (objeto da classe Nodo) e retorna um conjunto de nodos.
-    Cada nodo do conjunto é contém um estado sucessor do nó recebido.
-    :param nodo: objeto da classe Nodo
-    :return:
-    """
+def expande(nodo: Nodo) -> Set[Nodo]:
     
     proximas_acoes = sucessor(nodo.estado)
     proximos_nodos = set()
-    
-    for acao,proximo_estado in proximas_acoes:
-        proximo_nodo = Nodo(custo=nodo.custo + 1, acao = acao,estado = proximo_estado, pai = nodo)
+
+    for acao, proximo_estado in proximas_acoes:
+        proximo_nodo = Nodo(custo=nodo.custo + 1, acao=acao, estado=proximo_estado, pai=nodo)
         proximos_nodos.add(proximo_nodo)
-        
+
     return proximos_nodos
 
-def astar_hamming(estado:str)->list[str]:
-    """
-    Recebe um estado (string), executa a busca A* com h(n) = soma das distâncias de Hamming e
-    retorna uma lista de ações que leva do
-    estado recebido até o objetivo ("12345678_").
-    Caso não haja solução a partir do estado recebido, retorna None
-    :param estado: str
-    :return:
-    """
-    # substituir a linha abaixo pelo seu codigo
-    raise NotImplementedError
+def astar_hamming(estado: str) -> list[str]:
+    objetivo = "12345678_"
+    visitados = set()
+    fronteira = [(0, Nodo(estado, None, None, 0))]
 
+    while fronteira:
+        _, nodo = heapq.heappop(fronteira)
 
-def astar_manhattan(estado:str)->list[str]:
-    """
-    Recebe um estado (string), executa a busca A* com h(n) = soma das distâncias de Manhattan e
-    retorna uma lista de ações que leva do
-    estado recebido até o objetivo ("12345678_").
-    Caso não haja solução a partir do estado recebido, retorna None
-    :param estado: str
-    :return:
-    """
-    # substituir a linha abaixo pelo seu codigo
-    raise NotImplementedError
+        if nodo.estado == objetivo:
+            caminho = []
+            while nodo.pai:
+                caminho.append(nodo.acao)
+                nodo = nodo.pai
+            return caminho[::-1]
 
-#opcional,extra
-def bfs(estado:str)->list[str]:
-    """
-    Recebe um estado (string), executa a busca em LARGURA e
-    retorna uma lista de ações que leva do
-    estado recebido até o objetivo ("12345678_").
-    Caso não haja solução a partir do estado recebido, retorna None
-    :param estado: str
-    :return:
-    """
-    # substituir a linha abaixo pelo seu codigo
-    raise NotImplementedError
+        if nodo.estado not in visitados:
+            visitados.add(nodo.estado)
+            for filho in expande(nodo):
+                h = sum(1 for i, c in enumerate(filho.estado) if c != "_" and c != objetivo[i])
+                f = filho.custo + h
+                heapq.heappush(fronteira, (f, filho))
 
-#opcional,extra
-def dfs(estado:str)->list[str]:
-    """
-    Recebe um estado (string), executa a busca em PROFUNDIDADE e
-    retorna uma lista de ações que leva do
-    estado recebido até o objetivo ("12345678_").
-    Caso não haja solução a partir do estado recebido, retorna None
-    :param estado: str
-    :return:
-    """
-    # substituir a linha abaixo pelo seu codigo
-    raise NotImplementedError
+    return None
 
-#opcional,extra
-def astar_new_heuristic(estado:str)->list[str]:
-    """
-    Recebe um estado (string), executa a busca A* com h(n) = sua nova heurística e
-    retorna uma lista de ações que leva do
-    estado recebido até o objetivo ("12345678_").
-    Caso não haja solução a partir do estado recebido, retorna None
-    :param estado: str
-    :return:
-    """
-    # substituir a linha abaixo pelo seu codigo
-    raise NotImplementedError
+def astar_manhattan(estado: str) -> list[str]:
+    objetivo = "12345678_"
+    posicoes_objetivo = {v: i for i, v in enumerate(objetivo)}
+    visitados = set()
+    fronteira = [(0, Nodo(estado, None, None, 0))]
 
+    while fronteira:
+        _, nodo = heapq.heappop(fronteira)
+
+        if nodo.estado == objetivo:
+            caminho = []
+            while nodo.pai:
+                caminho.append(nodo.acao)
+                nodo = nodo.pai
+            return caminho[::-1]
+
+        if nodo.estado not in visitados:
+            visitados.add(nodo.estado)
+            for filho in expande(nodo):
+                h = sum(
+                    abs(i // 3 - posicoes_objetivo[c] // 3) + abs(i % 3 - posicoes_objetivo[c] % 3)
+                    for i, c in enumerate(filho.estado) if c != "_"
+                )
+                f = filho.custo + h
+                heapq.heappush(fronteira, (f, filho))
+
+    return None
+
+# Extras opcionais
+def bfs(estado: str) -> list[str]:
+    
+    fronteira = [Nodo(estado, None, None, 0)]
+    visitados = set()
+
+    while fronteira:
+        nodo = fronteira.pop(0)
+
+        if nodo.estado == "12345678_":
+            caminho = []
+            while nodo.pai:
+                caminho.append(nodo.acao)
+                nodo = nodo.pai
+            return caminho[::-1]
+
+        if nodo.estado not in visitados:
+            visitados.add(nodo.estado)
+            fronteira.extend(expande(nodo))
+
+    return None
+
+def dfs(estado: str) -> list[str]:
+    
+    fronteira = [Nodo(estado, None, None, 0)]
+    visitados = set()
+
+    while fronteira:
+        nodo = fronteira.pop()
+
+        if nodo.estado == "12345678_":
+            caminho = []
+            while nodo.pai:
+                caminho.append(nodo.acao)
+                nodo = nodo.pai
+            return caminho[::-1]
+
+        if nodo.estado not in visitados:
+            visitados.add(nodo.estado)
+            fronteira.extend(expande(nodo))
+
+    return None
+
+def astar_new_heuristic(estado: str) -> list[str]:
+    
+    objetivo = "12345678_"
+    visitados = set()
+    fronteira = [(0, Nodo(estado, None, None, 0))]
+
+    while fronteira:
+        _, nodo = heapq.heappop(fronteira)
+
+        if nodo.estado == objetivo:
+            caminho = []
+            while nodo.pai:
+                caminho.append(nodo.acao)
+                nodo = nodo.pai
+            return caminho[::-1]
+
+        if nodo.estado not in visitados:
+            visitados.add(nodo.estado)
+            for filho in expande(nodo):
+                h = max(abs(i // 3 - objetivo.index(c) // 3) + abs(i % 3 - objetivo.index(c) % 3) for i, c in enumerate(filho.estado) if c != "_")
+                f = filho.custo + h
+                heapq.heappush(fronteira, (f, filho))
+
+    return None
