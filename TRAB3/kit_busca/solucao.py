@@ -40,16 +40,16 @@ def sucessor(estado:str)->Set[Tuple[str,str]]:
     acoes = {
         "direita" : 1,
         "esquerda" : -1,
-        "cima" : -3,
-        "baixo" : 3
+        "acima" : -3,
+        "abaixo" : 3
     }
     
     # dicionario com as restrições de cada ação para uma determinada posicao vazia
     restricao_movimentos = {
         "direita": [2,5,8],
         "esquerda": [0,3,6],
-        "cima": [0,1,2],
-        "baixo": [6,7,8],
+        "acima": [0,1,2],
+        "abaixo": [6,7,8],
     }
     
     
@@ -79,9 +79,15 @@ def expande(nodo:Nodo)->Set[Nodo]:
     :param nodo: objeto da classe Nodo
     :return:
     """
-    # substituir a linha abaixo pelo seu codigo
-    raise NotImplementedError
-
+    
+    proximas_acoes = sucessor(nodo.estado)
+    proximos_nodos = set()
+    
+    for acao,proximo_estado in proximas_acoes:
+        proximo_nodo = Nodo(custo=nodo.custo + 1, acao = acao,estado = proximo_estado, pai = nodo)
+        proximos_nodos.add(proximo_nodo)
+        
+    return proximos_nodos
 
 def astar_hamming(estado:str)->list[str]:
     """
