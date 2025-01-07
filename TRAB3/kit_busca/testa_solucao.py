@@ -1,94 +1,132 @@
-import unittest
-import timer
-import solucao as solucao
+from typing import Iterable, Set, Tuple
+import heapq
 
+class Nodo:
+    """
+    Representa um nó do grafo de busca.
+    """
+    def __init__(self, estado: str, pai: 'Nodo', acao: str, custo: int):
+        self.estado = estado
+        self.pai = pai
+        self.acao = acao
+        self.custo = custo
 
-class TestaSolucao(unittest.TestCase):
-    
-    def test_funcao_sucessor(self):
-        """
-        Testa a funcao sucessor para o estado "2_3541687"
-        :return:
+    def __eq__(self, other):
+        return isinstance(other, Nodo) and self.estado == other.estado
 
-        """
-        # a lista de sucessores esperados é igual ao conjunto abaixo (ordem nao importa)
-        succ_esperados = {("abaixo", "2435_1687"), ("esquerda", "_23541687"), ("direita", "23_541687")}
+    def __hash__(self):
+        return hash(self.estado)
 
-        sucessores = solucao.sucessor("2_3541687")  # obtem os sucessores chamando a funcao implementada
-        self.assertEqual(3, len(sucessores))     # verifica se foram retornados 3 sucessores
-        for s in sucessores:                     # verifica se os sucessores retornados estao entre os esperados
-            self.assertIn(s, succ_esperados)
+def sucessor(estado: str) -> Set[Tuple[str, str]]:
+    """
+    Recebe um estado (string) e retorna um conjunto de tuplas (ação, estado atingido)
+    para cada ação possível no estado recebido.
+    """
+    movimentos = {
+        "direita": 1, "esquerda": -1, "acima": -3, "abaixo": 3
+    }
+    restricoes = {
+        "direita": [2, 5, 8], "esquerda": [0, 3, 6],
+        "acima": [0, 1, 2], "abaixo": [6, 7, 8]
+    }
+    posicao_vazia = estado.find("_")
+    sucessores = set()
 
-    def test_funcao_expande(self):
-        """
-        Testa a função expande para um Node com estado "185432_67" e custo 2
-        :return:
-        """
-        estado_pai = "185432_67"
-        pai = solucao.Nodo(estado_pai, None, "abaixo", 2)  # o pai do pai esta incorreto, mas nao interfere no teste
-        # a resposta esperada deve conter nodos com os seguintes atributos (ordem dos nodos nao importa)
-        resposta_esperada = {
-            ("185_32467", estado_pai, "acima", 3),
-            ("1854326_7", estado_pai, "direita", 3),
-        }
+    for acao, deslocamento in movimentos.items():
+        if posicao_vazia not in restricoes[acao]:
+            nova_posicao = posicao_vazia + deslocamento
+            novo_estado = list(estado)
+            novo_estado[posicao_vazia], novo_estado[nova_posicao] = novo_estado[nova_posicao], novo_estado[posicao_vazia]
+            sucessores.add((acao, "".join(novo_estado)))
 
-        resposta = solucao.expande(pai)  # obtem a resposta chamando a funcao implementada
-        self.assertEqual(2, len(resposta))  # verifica se foram retornados 2 nodos
-        for nodo in resposta:
-            # verifica se a tupla com os atributos do nodo esta' presente no conjunto com os nodos esperados
-            self.assertIn((nodo.estado, nodo.pai.estado, nodo.acao, nodo.custo), resposta_esperada)
+    return sucessores
 
-    def run_algorithm(self, alg, input):
-        """
-        Um helper que executa o algoritmo verificando timeout. Falha se der timeout
-        ou retorna a resposta do algoritmo caso contrario.
-        """
-        response = timer.timeout(
-            alg,
-            args=(input,),  # must be a 1-element tuple or it doesn't work
-            time_limit=60, default='timeout'
-        )
-        if response == 'timeout':
-            self.fail(f"{alg.__name__}: timeout")
+def expande(nodo: Nodo) -> Set[Nodo]:
+    """
+    Recebe um nodo e retorna um conjunto de nodos sucessores.
+    """
+    proximas_acoes = sucessor(nodo.estado)
+    proximos_nodos = set()
 
-        return response
+    for acao, proximo_estado in proximas_acoes:
+        proximo_nodo = Nodo(custo=nodo.custo + 1, acao=acao, estado=proximo_estado, pai=nodo)
+        proximos_nodos.add(proximo_nodo)
 
+    return proximos_nodos
 
-    def test_run_astar_hamming(self):
-        """
-        Testa o A* com dist. Hamming em um estado com solução e outro sem solução.
-        Atencao! Passar nesse teste com '2_3541687' apenas significa que a lista retornada tem o
-        numero correto de elementos. O teste nao checa se as acoes levam para a solucao!
-        :return:
-        """
-        # no estado 2_3541687, a solucao otima tem 23 movimentos.
-        self.assertEqual(23, len(self.run_algorithm(solucao.astar_hamming, "2_3541687")))
+def astar_hamming(estado: str) -> list[str]:
+    """
+    Executa a busca A* com a heurística de Hamming.
+    """
+    objetivo = "12345678_"
+    visitados = set()
+    fronteira = [(0, Nodo(estado, None, None, 0))]
 
-        # nao ha solucao a partir do estado 185423_67
-        self.assertIsNone(self.run_algorithm(solucao.astar_hamming, "185423_67"))
+    while fronteira:
+        _, nodo = heapq.heappop(fronteira)
 
-    def test_run_astar_manhattan(self):
-        """
-        Testa o A* com dist. Manhattan em um estado com solução e outro sem solução.
-        Atencao! Passar nesse teste com '2_3541687' apenas significa que a lista retornada tem o
-        numero correto de elementos. O teste nao checa se as acoes levam para a solucao!
-        :return:
-        """
-        # no estado 2_3541687, a solucao otima tem 23 movimentos.
-        self.assertEqual(23, len(self.run_algorithm(solucao.astar_manhattan, "2_3541687")))
+        if nodo.estado == objetivo:
+            caminho = []
+            while nodo.pai:
+                caminho.append(nodo.acao)
+                nodo = nodo.pai
+            return caminho[::-1]
 
-        # nao ha solucao a partir do estado 185423_67
-        self.assertIsNone(self.run_algorithm(solucao.astar_manhattan, "185423_67"))
-    
-    def test_action_order(self):
-        """
-        Testa se A* retornam a sequencia de acoes na ordem correta
-        """
-        estado = "1235_6478"
-        solucao_otima = ['esquerda', 'abaixo', 'direita', 'direita']
+        if nodo.estado not in visitados:
+            visitados.add(nodo.estado)
+            for filho in expande(nodo):
+                h = sum(1 for i, c in enumerate(filho.estado) if c != "_" and c != objetivo[i])
+                f = filho.custo + h
+                heapq.heappush(fronteira, (f, filho))
 
-        for alg in [solucao.astar_hamming, solucao.astar_manhattan]:
-            self.assertEqual(solucao_otima, self.run_algorithm(alg, estado))
+    return None
 
-if __name__ == '__main__':
-    unittest.main()
+def astar_manhattan(estado: str) -> list[str]:
+    """
+    Executa a busca A* com a heurística de Manhattan.
+    """
+    objetivo = "12345678_"
+    posicoes_objetivo = {v: i for i, v in enumerate(objetivo)}
+    visitados = set()
+    fronteira = [(0, Nodo(estado, None, None, 0))]
+
+    while fronteira:
+        _, nodo = heapq.heappop(fronteira)
+
+        if nodo.estado == objetivo:
+            caminho = []
+            while nodo.pai:
+                caminho.append(nodo.acao)
+                nodo = nodo.pai
+            return caminho[::-1]
+
+        if nodo.estado not in visitados:
+            visitados.add(nodo.estado)
+            for filho in expande(nodo):
+                h = sum(
+                    abs(i // 3 - posicoes_objetivo[c] // 3) + abs(i % 3 - posicoes_objetivo[c] % 3)
+                    for i, c in enumerate(filho.estado) if c != "_"
+                )
+                f = filho.custo + h
+                heapq.heappush(fronteira, (f, filho))
+
+    return None
+
+# Extras opcionais
+def bfs(estado: str) -> list[str]:
+    """
+    Executa a busca em largura.
+    """
+    raise NotImplementedError
+
+def dfs(estado: str) -> list[str]:
+    """
+    Executa a busca em profundidade.
+    """
+    raise NotImplementedError
+
+def astar_new_heuristic(estado: str) -> list[str]:
+    """
+    Executa a busca A* com uma nova heurística.
+    """
+    raise NotImplementedError
